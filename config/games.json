@@ -31,13 +31,6 @@
             ]
         }
     },
-    "csgo": {
-        "Reddit": {
-            "allowedSections": [
-                "GlobalOffensive"
-            ]
-        }
-    },
     "destiny": {
         "Reddit": {
             "allowedSections": [
