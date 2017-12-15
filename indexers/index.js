@@ -1,3 +1,3 @@
 module.exports = {
-    Reddit: require( './Reddit.js' ),
+    reddit: require( './reddit.js' ),
 };

@@ -65,14 +65,12 @@ process.on( 'exit', () => {
 const indexGame = function indexGame ( gameData ) {
     // console.log( `Indexing ${ gameData.identifier }` );
     return new Promise( async ( resolve, reject ) => {
-        const indexer = new indexers[ 'Reddit' ];
-
         // console.log( `Checking ${ gameData.accounts.length } devs for ${ gameData.identifier }` );
 
         for ( let accountIndex = 0; accountIndex < gameData.accounts.length; accountIndex = accountIndex + 1 ) {
             // console.log( `Finding posts for ${ gameData.accounts[ accountIndex ].identifier }` );
             const start = now();
-            const newPosts = await indexer.findNewPosts( gameData.accounts[ accountIndex ].identifier, gameData.allowedSections, gameData.disallowedSections )
+            const newPosts = await indexers.reddit.findNewPosts( gameData.accounts[ accountIndex ].identifier, gameData.allowedSections, gameData.disallowedSections )
             let addJobs = [];
 
             for( let i = 0; i < newPosts.length; i = i + 1 ) {
