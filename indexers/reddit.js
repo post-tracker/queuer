@@ -139,10 +139,7 @@ class Reddit {
             }
 
             if ( await this.isNewPost( posts.children[ postIndex ] ) ) {
-                existCount = 0;
                 newPosts.push( posts.children[ postIndex ] );
-            } else {
-                existCount = existCount + 1;
             }
         }
 
