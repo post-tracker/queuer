@@ -138,6 +138,11 @@ class Reddit {
                 continue;
             }
 
+            if ( this.getPostUrl( posts.children[ postIndex ] ).indexOf( 'www.reddit.com' ) === -1 ) {
+                // Skip posts not directly on reddit
+                continue;
+            }
+
             if ( await this.isNewPost( posts.children[ postIndex ] ) ) {
                 newPosts.push( posts.children[ postIndex ] );
             }
