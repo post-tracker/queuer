@@ -8,7 +8,6 @@ const API_PORT = 443;
 // const API_HOST = 'localhost';
 // const API_PORT = 3000;
 
-const EXISTING_CUTOFF = 5;
 const EXISTS_STATUS_CODE = 200;
 
 const gotOptions = {
@@ -129,12 +128,6 @@ class Reddit {
 
         let existCount = 0;
         for ( let postIndex = 0; postIndex < posts.children.length; postIndex = postIndex + 1 ) {
-
-            // If we found a number of pre-existing posts in a row, we've probably got them all
-            if ( existCount > EXISTING_CUTOFF ) {
-                break;
-            }
-
             if ( !posts.children[ postIndex ].data.selftext_html && !posts.children[ postIndex ].data.body_html ) {
                 // Post has no content
                 console.log( `Skipping post because it's missing content` );
