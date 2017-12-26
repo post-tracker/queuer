@@ -3,7 +3,7 @@ const https = require( 'https' );
 const got = require( 'got' );
 const sha1 = require( 'sha1' );
 
-const API_HOST = 'api.developertracker.com';
+const API_HOST = 'api.kokarn.com';
 const API_PORT = 443;
 // const API_HOST = 'localhost';
 // const API_PORT = 3000;
