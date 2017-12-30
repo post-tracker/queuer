@@ -73,5 +73,12 @@
                 "RimWorld"
             ]
         }
+    },
+    "tab": {
+        "Reddit": {
+            "allowedSections": [
+                "TheyAreBillions"
+            ]
+        }
     }
 }
