@@ -19,8 +19,6 @@ if ( !QUEUE ) {
     throw new Error( 'Got no queue, exiting' );
 }
 
-const gameData = require( './config/games.json' );
-
 const requestOptions = {
     headers: {
         Authorization: `Bearer ${ API_TOKEN }`,
@@ -92,9 +90,23 @@ const indexGame = function indexGame ( gameData ) {
 };
 
 
-const run = function run () {
+const run = async function run () {
     const gamePromises = [];
-    // return got( `https://api.kokarn.com/${ game.identifier }/hashes`, requestOptions );
+    let gamesResponse = false;
+
+    try {
+        gamesResponse = await got( `https://api.kokarn.com/games`, requestOptions );
+    } catch ( gameDataError ) {
+        throw gameDataError;
+    }
+
+    const gameData = {};
+
+    gamesResponse.body.data.forEach( ( gameConfig ) => {
+        if ( gameConfig.config && gameConfig.config.sources ) {
+            gameData[ gameConfig.identifier ] = gameConfig.config.sources;
+        }
+    } );
 
     Object.keys( gameData ).forEach( ( gameIdentifier ) => {
         gamePromises.push( got( `https://api.kokarn.com/${ gameIdentifier }/accounts?active=1`, requestOptions )
