@@ -111,8 +111,16 @@ const run = async function run () {
     Object.keys( gameData ).forEach( ( gameIdentifier ) => {
         gamePromises.push( got( `https://api.kokarn.com/${ gameIdentifier }/accounts?active=1`, requestOptions )
             .then( ( accountResponse ) => {
+                const accounts = [];
+
+                for ( let i = 0; i < accountResponse.body.data.length; i = i + 1 ) {
+                    if ( accountResponse.body.data[ i ].service === 'Reddit' ) {
+                        accounts.push( accountResponse.body.data[ i ] );
+                    }
+                }
+
                 return {
-                    accounts: accountResponse.body.data,
+                    accounts: accounts,
                     identifier: gameIdentifier,
                     allowedSections: gameData[ gameIdentifier ][ 'Reddit' ].allowedSections,
                     disallowedSections: gameData[ gameIdentifier ][ 'Reddit' ].disallowedSections,
@@ -128,16 +136,6 @@ const run = async function run () {
     Promise.all( gamePromises )
         .then( async ( gameData ) => {
             for ( let gameIndex = 0; gameIndex < gameData.length; gameIndex = gameIndex + 1 ) {
-                const accounts = [];
-
-                for ( let i = 0; i < gameData[ gameIndex ].accounts.length; i = i + 1 ) {
-                    if ( gameData[ gameIndex ].accounts[ i ].service === 'Reddit' ) {
-                        accounts.push( gameData[ gameIndex ].accounts[ i ] );
-                    }
-                }
-
-                gameData[ gameIndex ].accounts = accounts;
-
                 await indexGame( gameData[ gameIndex ] )
                     .catch( ( indexError ) => {
                         throw indexError;
