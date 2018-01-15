@@ -1,4 +1,5 @@
 const https = require( 'https' );
+const { URL } = require( 'url' );
 
 const got = require( 'got' );
 const sha1 = require( 'sha1' );
@@ -44,13 +45,21 @@ class Reddit {
     }
 
     getPostUrl ( post ) {
+        let targetUrl;
+
         switch ( post.kind ) {
             case 't1':
-                return `${ post.data.link_url }${ post.data.id }/`;
+                return `${ post.data.link_permalink || post.data.link_url }${ post.data.id }/`;
 
                 break;
             case 't3':
-                return post.data.url;
+                targetUrl = new URL( post.data.url );
+
+                if ( targetUrl.hostname === 'reddit.com' || targetUrl.hostname === 'www.reddit.com' ) {
+                    return post.data.url;
+                } else {
+                    return `https://www.reddit.com${ post.data.permalink }`;
+                }
 
                 break;
             default:
@@ -128,20 +137,10 @@ class Reddit {
 
         let existCount = 0;
         for ( let postIndex = 0; postIndex < posts.children.length; postIndex = postIndex + 1 ) {
-            if ( !posts.children[ postIndex ].data.selftext_html && !posts.children[ postIndex ].data.body_html ) {
-                // Post has no content
-                console.log( `Skipping post because it's missing content` );
-                continue;
-            }
-
             if ( !this.inValidSection( posts.children[ postIndex ].data.subreddit, allowedSections, disallowedSections ) ) {
                 continue;
             }
 
-            if ( this.getPostUrl( posts.children[ postIndex ] ).indexOf( 'www.reddit.com' ) === -1 ) {
-                // Skip posts not directly on reddit
-                continue;
-            }
 
             if ( await this.isNewPost( posts.children[ postIndex ] ) ) {
                 newPosts.push( posts.children[ postIndex ] );
