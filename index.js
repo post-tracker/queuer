@@ -6,17 +6,17 @@ const got = require( 'got' );
 const Queue = require( 'bull' );
 const now = require( 'performance-now' );
 
+
 const indexers = require( './indexers/' );
 
 const API_TOKEN = process.env.API_TOKEN;
-const QUEUE = JSON.parse( process.env.QUEUE );
 
 if ( !API_TOKEN ) {
     throw new Error( 'Unable to load API token' );
 }
 
-if ( !QUEUE ) {
-    throw new Error( 'Got no queue, exiting' );
+if ( !process.env.REDIS_URL ) {
+    throw new Error( 'Got no queue string, exiting' );
 }
 
 const requestOptions = {
@@ -27,10 +27,8 @@ const requestOptions = {
 };
 
 const redditQueue = new Queue(
-    'reddit',
-    {
-        redis: QUEUE,
-    }
+    'reddit-posts',
+    process.env.REDIS_URL,
 );
 
 const addJobToQueue = function addJobToQueue ( accountId, gameIdentifier, jobData ) {
