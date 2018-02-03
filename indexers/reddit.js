@@ -53,9 +53,7 @@ class Reddit {
 
                 break;
             case 't3':
-                targetUrl = new URL( post.data.url );
-
-                if ( targetUrl.hostname === 'reddit.com' || targetUrl.hostname === 'www.reddit.com' ) {
+                if ( post.data.selftext_html || ( post.data.secure_media_embed && post.data.secure_media_embed.content ) ) {
                     return post.data.url;
                 } else {
                     return `https://www.reddit.com${ post.data.permalink }`;
