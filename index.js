@@ -134,10 +134,15 @@ const run = async function run () {
     Promise.all( gamePromises )
         .then( async ( gameData ) => {
             for ( let gameIndex = 0; gameIndex < gameData.length; gameIndex = gameIndex + 1 ) {
+
+                console.time( gameData[ gameIndex ].identifier );
+
                 await indexGame( gameData[ gameIndex ] )
                     .catch( ( indexError ) => {
                         throw indexError;
                     } );
+
+                console.timeEnd( gameData[ gameIndex ].identifier );
             }
 
             // Close queue after all games are indexed
