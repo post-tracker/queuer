@@ -66,12 +66,13 @@ const indexGame = function indexGame ( gameData ) {
     // console.log( `Indexing ${ gameData.identifier }` );
     return new Promise( async ( resolve, reject ) => {
         // console.log( `Checking ${ gameData.accounts.length } devs for ${ gameData.identifier }` );
+        let indexPromises = [];
 
         for ( let accountIndex = 0; accountIndex < gameData.accounts.length; accountIndex = accountIndex + 1 ) {
             // console.log( `Finding posts for ${ gameData.accounts[ accountIndex ].identifier }` );
             const start = now();
 
-            indexers.reddit.findNewPosts( gameData.accounts[ accountIndex ].identifier, gameData.allowedSections, gameData.disallowedSections )
+            indexPromises.push( indexers.reddit.findNewPosts( gameData.accounts[ accountIndex ].identifier, gameData.allowedSections, gameData.disallowedSections )
                 .then( ( newPosts ) => {
                     let addJobs = [];
 
@@ -83,7 +84,8 @@ const indexGame = function indexGame ( gameData ) {
                 } )
                 .catch( ( indexError ) => {
                     console.error( indexError );
-                } );
+                } )
+            );
 
             const end = now();
 
@@ -93,7 +95,10 @@ const indexGame = function indexGame ( gameData ) {
             }
         }
 
-        resolve();
+        Promise.all( indexPromises )
+            .then( () => {
+                resolve();
+            } );
     } );
 };
 
