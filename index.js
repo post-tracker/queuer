@@ -19,6 +19,10 @@ if ( !process.env.REDIS_URL ) {
     throw new Error( 'Got no queue string, exiting' );
 }
 
+const MAX_INDEX_TIME = ( 9 * 60 * 1000 ); // 9 minutes
+const MIN_REQUEST_TIMING = 1000;
+let requestTiming = 1000;
+
 const requestOptions = {
     headers: {
         Authorization: `Bearer ${ API_TOKEN }`,
@@ -66,20 +70,26 @@ const indexGame = function indexGame ( gameData ) {
         for ( let accountIndex = 0; accountIndex < gameData.accounts.length; accountIndex = accountIndex + 1 ) {
             // console.log( `Finding posts for ${ gameData.accounts[ accountIndex ].identifier }` );
             const start = now();
-            const newPosts = await indexers.reddit.findNewPosts( gameData.accounts[ accountIndex ].identifier, gameData.allowedSections, gameData.disallowedSections )
-            let addJobs = [];
 
-            for( let i = 0; i < newPosts.length; i = i + 1 ) {
-                addJobs.push( addJobToQueue( gameData.accounts[ accountIndex ].id, gameData.identifier, newPosts[ i ] ) );
-            }
+            indexers.reddit.findNewPosts( gameData.accounts[ accountIndex ].identifier, gameData.allowedSections, gameData.disallowedSections )
+                .then( ( newPosts ) => {
+                    let addJobs = [];
 
-            await Promise.all( addJobs );
+                    for( let i = 0; i < newPosts.length; i = i + 1 ) {
+                        addJobs.push( addJobToQueue( gameData.accounts[ accountIndex ].id, gameData.identifier, newPosts[ i ] ) );
+                    }
+
+                    return Promise.all( addJobs );
+                } )
+                .catch( ( indexError ) => {
+                    console.error( indexError );
+                } );
 
             const end = now();
 
-            // Make sure we don't do more than 1 request / 1000 ms
-            if ( end - start < 1000 ) {
-                await sleep( 1000 - ( end - start ) );
+            // Make sure we don't do more than 1 request / MIN_REQUEST_TIMING ms
+            if ( end - start < requestTiming ) {
+                await sleep( Math.max( requestTiming, MIN_REQUEST_TIMING ) - ( end - start ) );
             }
         }
 
@@ -91,6 +101,7 @@ const indexGame = function indexGame ( gameData ) {
 const run = async function run () {
     const gamePromises = [];
     let gamesResponse = false;
+    let totalAccounts = 0;
 
     try {
         gamesResponse = await got( `https://api.kokarn.com/games`, requestOptions );
@@ -114,6 +125,8 @@ const run = async function run () {
                 for ( let i = 0; i < accountResponse.body.data.length; i = i + 1 ) {
                     if ( accountResponse.body.data[ i ].service === 'Reddit' ) {
                         accounts.push( accountResponse.body.data[ i ] );
+
+                        totalAccounts = totalAccounts + 1;
                     }
                 }
 
@@ -133,6 +146,9 @@ const run = async function run () {
 
     Promise.all( gamePromises )
         .then( async ( gameData ) => {
+            console.log( `Got ${ totalAccounts } Reddit accounts` );
+            requestTiming = Math.round( MAX_INDEX_TIME / totalAccounts );
+
             for ( let gameIndex = 0; gameIndex < gameData.length; gameIndex = gameIndex + 1 ) {
 
                 console.time( gameData[ gameIndex ].identifier );
