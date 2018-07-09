@@ -19,7 +19,7 @@ if ( !process.env.REDIS_URL ) {
     throw new Error( 'Got no queue string, exiting' );
 }
 
-const MAX_INDEX_TIME = ( 9 * 60 * 1000 ); // 9 minutes
+const MAX_INDEX_TIME = ( 8 * 60 * 1000 ); // 8 minutes
 const MIN_REQUEST_TIMING = 1000;
 let requestTiming = 1000;
 
