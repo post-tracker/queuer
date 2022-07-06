@@ -109,7 +109,7 @@ const run = async function run () {
     let totalAccounts = 0;
 
     try {
-        gamesResponse = await got( `https://api.kokarn.com/games`, requestOptions );
+        gamesResponse = await got( `https://api2.developertracker.com/games`, requestOptions );
     } catch ( gameDataError ) {
         throw gameDataError;
     }
@@ -123,7 +123,7 @@ const run = async function run () {
     } );
 
     Object.keys( gameData ).forEach( ( gameIdentifier ) => {
-        gamePromises.push( got( `https://api.kokarn.com/${ gameIdentifier }/accounts?active=1`, requestOptions )
+        gamePromises.push( got( `https://api2.developertracker.com/${ gameIdentifier }/accounts?active=1`, requestOptions )
             .then( ( accountResponse ) => {
                 const accounts = [];
 
