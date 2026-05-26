@@ -10,6 +10,8 @@ const API_PORT = 443;
 // const API_PORT = 3000;
 
 const EXISTS_STATUS_CODE = 200;
+const RATE_LIMIT_STATUS_CODE = 429;
+const RATE_LIMIT_COOLDOWN = 60000;
 
 const gotOptions = {
     headers: {
@@ -17,6 +19,8 @@ const gotOptions = {
     },
     json: true,
 };
+
+const sleep = ( ms ) => new Promise( ( resolve ) => setTimeout( resolve, ms ) );
 
 class Reddit {
     constructor () {
@@ -122,9 +126,17 @@ class Reddit {
             const postsData = await got( url, gotOptions );
             posts = postsData.body.data;
         } catch ( requestError ) {
-            console.log( requestError );
+            if ( requestError.statusCode === RATE_LIMIT_STATUS_CODE ) {
+                console.log( `Reddit rate-limited ${ userId }, cooling down ${ RATE_LIMIT_COOLDOWN }ms` );
 
-            return requestError;
+                await sleep( RATE_LIMIT_COOLDOWN );
+
+                return [];
+            }
+
+            console.log( requestError.message || requestError );
+
+            return [];
         }
 
         if ( !posts.children ) {

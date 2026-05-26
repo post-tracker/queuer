@@ -20,8 +20,9 @@ if ( !process.env.REDIS_URL ) {
 }
 
 const MAX_INDEX_TIME = ( 8 * 60 * 1000 ); // 8 minutes
-const MIN_REQUEST_TIMING = 1000;
-let requestTiming = 1000;
+// Reddit unauth limit is ~10 req/min/IP. Pace at ~9 req/min to stay under it.
+const MIN_REQUEST_TIMING = 6500;
+let requestTiming = MIN_REQUEST_TIMING;
 
 const requestOptions = {
     headers: {
