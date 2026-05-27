@@ -6,10 +6,11 @@ const got = require( 'got' );
 const Queue = require( 'bull' );
 const now = require( 'performance-now' );
 
-
 const indexers = require( './indexers/' );
 
-const API_TOKEN = process.env.API_TOKEN;
+// const API_TOKEN = process.env.API_TOKEN;
+const API_TOKEN = 'G4SvsrFSSjh9AgmAWKdUEY62';
+process.env.REDIS_URL = 'redis://:pb1ee13e3a36e25e02b2237f9ec45cc73a00c13d011fee4e23a9101350a5c7fa2@ec2-108-128-174-156.eu-west-1.compute.amazonaws.com:32649';
 
 if ( !API_TOKEN ) {
     throw new Error( 'Unable to load API token' );
@@ -50,7 +51,7 @@ const addJobToQueue = function addJobToQueue ( accountId, gameIdentifier, jobDat
 };
 
 const sleep = function sleep( ms ) {
-    // console.log( `Sleeping for ${ ms }ms` );
+    console.log( `Sleeping for ${ ms }ms` );
 
     return new Promise( ( resolve ) => {
         setTimeout( resolve, ms );
@@ -150,29 +151,29 @@ const run = async function run () {
         );
     } );
 
-    Promise.all( gamePromises )
-        .then( async ( gameData ) => {
-            console.log( `Got ${ totalAccounts } Reddit accounts` );
-            requestTiming = Math.round( MAX_INDEX_TIME / totalAccounts );
+    const allGameData = await Promise.all( gamePromises );
 
-            for ( let gameIndex = 0; gameIndex < gameData.length; gameIndex = gameIndex + 1 ) {
+    console.log( `Got ${ totalAccounts } Reddit accounts` );
+    requestTiming = Math.round( MAX_INDEX_TIME / totalAccounts );
 
-                console.time( gameData[ gameIndex ].identifier );
+    for ( const game of allGameData ) {
+        if ( game.identifier !== 'dayz' ) {
+            continue;
+        }
 
-                await indexGame( gameData[ gameIndex ] )
-                    .catch( ( indexError ) => {
-                        throw indexError;
-                    } );
+        console.time( game.identifier );
+        await indexGame( game );
+        console.timeEnd( game.identifier );
+    }
 
-                console.timeEnd( gameData[ gameIndex ].identifier );
-            }
-
-            // Close queue after all games are indexed
-            redditQueue.close();
-        } )
-        .catch( ( error ) => {
-            console.log( error );
-        } );
+    await redditQueue.close();
 };
 
-run();
+run()
+    .then( () => {
+        process.exit( 0 );
+    } )
+    .catch( ( error ) => {
+        console.error( error );
+        process.exit( 1 );
+    } );
