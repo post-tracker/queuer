@@ -165,15 +165,37 @@ const run = async function run () {
         await indexGame( game );
         console.timeEnd( game.identifier );
     }
-
-    await redditQueue.close();
 };
 
-run()
-    .then( () => {
-        process.exit( 0 );
-    } )
-    .catch( ( error ) => {
-        console.error( error );
-        process.exit( 1 );
-    } );
+const RUN_INTERVAL_MS = Number( process.env.RUN_INTERVAL_MS ) || ( 60 * 60 * 1000 );
+
+const loop = async function loop() {
+    while ( true ) {
+        try {
+            await run();
+        } catch ( error ) {
+            console.error( error );
+        }
+
+        await new Promise( ( resolve ) => {
+            setTimeout( resolve, RUN_INTERVAL_MS );
+        } );
+    }
+};
+
+const shutdown = async function shutdown() {
+    console.log( 'Shutting down' );
+
+    try {
+        await redditQueue.close();
+    } catch ( closeError ) {
+        console.error( closeError );
+    }
+
+    process.exit( 0 );
+};
+
+process.on( 'SIGTERM', shutdown );
+process.on( 'SIGINT', shutdown );
+
+loop();
