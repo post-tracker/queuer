@@ -5,6 +5,7 @@ const chalk = require( 'chalk' );
 const got = require( 'got' );
 const Queue = require( 'bull' );
 const now = require( 'performance-now' );
+const cron = require( 'node-cron' );
 
 const indexers = require( './indexers/' );
 
@@ -167,19 +168,25 @@ const run = async function run () {
     }
 };
 
-const RUN_INTERVAL_MS = Number( process.env.RUN_INTERVAL_MS ) || ( 60 * 60 * 1000 );
+const SCHEDULE = process.env.RUN_SCHEDULE || '0 * * * *';
 
-const loop = async function loop() {
-    while ( true ) {
-        try {
-            await run();
-        } catch ( error ) {
-            console.error( error );
-        }
+let running = false;
 
-        await new Promise( ( resolve ) => {
-            setTimeout( resolve, RUN_INTERVAL_MS );
-        } );
+const tick = async function tick() {
+    if ( running ) {
+        console.log( 'Previous run still in progress, skipping' );
+
+        return;
+    }
+
+    running = true;
+
+    try {
+        await run();
+    } catch ( error ) {
+        console.error( error );
+    } finally {
+        running = false;
     }
 };
 
@@ -198,4 +205,6 @@ const shutdown = async function shutdown() {
 process.on( 'SIGTERM', shutdown );
 process.on( 'SIGINT', shutdown );
 
-loop();
+cron.schedule( SCHEDULE, tick );
+
+tick();
