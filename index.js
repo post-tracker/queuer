@@ -121,6 +121,11 @@ const run = async function run () {
 
     gamesResponse.body.data.forEach( ( gameConfig ) => {
         if ( gameConfig.config && gameConfig.config.sources ) {
+            // Disabled game (config.live falsy) — don't index its devs.
+            if ( gameConfig.config.live === 0 || gameConfig.config.live === false ) {
+                return;
+            }
+
             gameData[ gameConfig.identifier ] = gameConfig.config.sources;
         }
     } );
